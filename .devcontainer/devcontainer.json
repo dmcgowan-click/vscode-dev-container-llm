@@ -34,6 +34,8 @@
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
 	"runArgs": [
+		"--gpus",
+		"all",
 		"--init"
 	],
 

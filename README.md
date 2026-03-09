@@ -26,3 +26,7 @@ Repo with templates to get developers started on containers and AI
 - Docker
 - VS Code with Dev Containers extension
 - GitHub authentication (for PR operations)
+
+## Enhancements
+
+- Need to add supervisord
