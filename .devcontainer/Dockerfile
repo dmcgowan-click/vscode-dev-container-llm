@@ -87,7 +87,8 @@ RUN mkdir -p \
     /home/${DEV_USER}/.config/gcloud \
     /home/${DEV_USER}/.ssh \
     /home/${DEV_USER}/.vscode \
-    /home/${DEV_USER}/.vscode-server
+    /home/${DEV_USER}/.vscode-server \
+    /home/${DEV_USER}/.ollama
 
 #Prep required files
 RUN touch /home/${DEV_USER}/.gitconfig \
