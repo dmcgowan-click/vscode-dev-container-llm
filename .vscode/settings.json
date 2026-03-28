@@ -3,5 +3,6 @@
         "git add": true,
         "git commit": true,
         "git push": true
-    }
+    },
+    "inlineChat.defaultModel": "Qwen3 (ollama)"
 }

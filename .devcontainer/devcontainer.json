@@ -26,24 +26,27 @@
 		8085
 	],
 
-	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	// "postCreateCommand": "apt-get update && apt-get install -y curl",
+	// Starting of supervisord must be managed here. CMD in the Docker file must be left as is
+	// Ideally, this would occur under the init.sh script under ENTRYPOINT but doesn't initilise
+	"postStartCommand": "supervisord -c /etc/supervisord.conf",
 
 	//Prevent override of container specific commands
 	"overrideCommand": false,
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
 	"runArgs": [
+		"--gpus",
+		"all",
 		"--init"
 	],
 
-	// Docker socket mount for docker-from-docker
 	"mounts": [ 
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind", // Docker socket mount for docker-from-docker
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/ubuntu/.gitconfig,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gcloud,target=/home/ubuntu/.config/gcloud,type=bind,consistency=cached",
 		"source=vscode,target=/home/ubuntu/.vscode,type=volume",
+		"source=ollama,target=/home/ubuntu/.ollama,type=volume",
 		//"source=vscode-server,target=/home/mrdev/.vscode-server,type=volume",
 		"source=bash_history,target=/home/ubuntu/.bash_history,type=volume",
 		"source=local,target=/home/ubuntu/.local,type=volume",
