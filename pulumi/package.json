@@ -1,0 +1,9 @@
+{
+  "name": "devops",
+  "lockfileVersion": 3,
+  "requires": true,
+  "dependencies": {
+    "@pulumi/pulumi": "^3.0.0"
+  },
+  "devDependencies": {}
+}
