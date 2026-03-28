@@ -6,7 +6,7 @@ ARG DEV_USER="ubuntu"
 
 #This allows user to perform a manual build within the .devcontainer folder, and for dev container plugin + .cicd to perform a build from the repos home directory
 #Both the dev container plugin and .cicd need to set the DEV_CONTAINER_PATHto .devcontainer
-ARG DEV_CONTAINER_PATH=""
+ARG DEV_CONTAINER_PATH="."
 
 #Nvidia Container Toolkit Version Argument - Update this as needed to ensure you have the latest version, or to pin to a specific version for stability. Check https://nvidia.github.io/libnvidia-container/ for the latest versions.
 ARG export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.18.2-1
@@ -35,6 +35,12 @@ EOF
 RUN apt-get update \
     && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+## Give the non-priviledged user access to Docker (optional, but common for dev containers)
+RUN groupadd -f docker && usermod -aG docker ${DEV_USER}
+
+# Script to run some critical functions at startup that can't managed within the Dockerfile
+COPY ${DEV_CONTAINER_PATH}/init.sh /usr/local/share/init.sh
+
 # NVIDIA Container Toolkit Installation Steps
 ## Add the package repositories
 RUN curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
@@ -60,6 +66,10 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
     && apt-get update \
     && apt-get install -y google-cloud-cli google-cloud-cli-cloud-run-proxy
 
+#Install nodejs and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - \
+    && apt-get install -y nodejs
+
 #Install Ollama for custom model hosting
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
@@ -81,17 +91,8 @@ autostart=true
 autorestart=true
 stderr_logfile=/var/log/supervisor/ollama.err.log
 stdout_logfile=/var/log/supervisor/ollama.out.log
-environment=OLLAMA_MAX_LOADED_MODELS="2",OLLAMA_NUM_GPU=1,HOME=/home/ubuntu/
+environment=OLLAMA_MAX_LOADED_MODELS="2",OLLAMA_NUM_GPU=1,OLLAMA_CONTEXT_LENGTH=128000,HOME=/home/ubuntu/
 EOF
-
-    # RUN <<EOF > /hello.txt
-    # This is line 1.
-    # This is line 2.
-    # This is line 3.
-    # EOF
-    # CMD cat /hello.txt
-#Configure Docker access for non-root user
-RUN groupadd -f docker && usermod -aG docker ${DEV_USER}
 
 # Add non priviledged user but give sudo access
 # RUN useradd -m ${DEV_USER} #Keeping for historical reasons, default user of ubuntu is now used
@@ -125,17 +126,9 @@ RUN touch /home/${DEV_USER}/.gitconfig \
 RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/home/${DEV_USER}/.bash_history/bash_history" \
     && echo "$SNIPPET" >> "/home/${DEV_USER}/.bashrc"
 
-# #Create and execute startup script to launch supervisor and keep the container alive
-# RUN cat <<EOF > /home/${DEV_USER}/startup.sh
-# #!/bin/bash
-# # Start Supervisor in the background
-# sudo supervisord -c /etc/supervisord.conf
+# Run some critical functions at startup that can't managed within the Dockerfile
+ENTRYPOINT [ "/usr/local/share/init.sh" ]
 
-# # Keep the container running
-# sleep infinity
-# EOF
-# RUN chmod u+x /home/${DEV_USER}/startup.sh
-
-# CMD ["/home/${DEV_USER}/startup.sh"]
-CMD ["sleep","infinity"]
+# This must not be changed. This is needed to keep the container alive regardless of 
+CMD [ "sleep","infinity" ]
 WORKDIR /home/${DEV_USER}
