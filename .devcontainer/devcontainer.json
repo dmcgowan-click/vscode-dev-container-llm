@@ -23,7 +23,8 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
-		8085
+		8085,
+		11434
 	],
 
 	// Starting of supervisord must be managed here. CMD in the Docker file must be left as is
@@ -68,6 +69,8 @@
 				"type": "http",
 				"url": "https://api.githubcopilot.com/mcp/"
 			}
-		}
+		},
+		"OLLAMA_MAX_LOADED_MODELS": "2",
+		"OLLAMA_NUM_GPU": "1"
 	}
 }

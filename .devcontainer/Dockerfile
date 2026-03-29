@@ -9,7 +9,7 @@ ARG DEV_USER="ubuntu"
 ARG DEV_CONTAINER_PATH="."
 
 #Nvidia Container Toolkit Version Argument - Update this as needed to ensure you have the latest version, or to pin to a specific version for stability. Check https://nvidia.github.io/libnvidia-container/ for the latest versions.
-ARG export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.18.2-1
+ARG NVIDIA_CONTAINER_TOOLKIT_VERSION=1.18.2-1
 
 #Update and install pre-requisite binaries 
 RUN apt-get update \
@@ -40,6 +40,7 @@ RUN groupadd -f docker && usermod -aG docker ${DEV_USER}
 
 # Script to run some critical functions at startup that can't managed within the Dockerfile
 COPY ${DEV_CONTAINER_PATH}/init.sh /usr/local/share/init.sh
+RUN chmod +rx /usr/local/share/init.sh
 
 # NVIDIA Container Toolkit Installation Steps
 ## Add the package repositories
@@ -76,11 +77,11 @@ RUN curl -fsSL https://ollama.com/install.sh | sh
 #Install and Configure Supervisor to manage ollama as a dameon
 ##FUTURE ENHANCEMENTs: 
 ## * Run under dedicated user
-## * Configure port (default is 11434)
+## * Not use the --break-system-packages parameter
 RUN mkdir -p /var/log/supervisor \
     && chgrp -R ${DEV_USER} /var/log/supervisor \
     && chmod -R g+rw /var/log/supervisor \
-    && pip install supervisor --break-system-packages \
+    && pip install --no-cache-dir --break-system-packages supervisor \
     && echo_supervisord_conf > /etc/supervisord.conf \
     && cat <<EOF >> /etc/supervisord.conf
 [program:ollama]

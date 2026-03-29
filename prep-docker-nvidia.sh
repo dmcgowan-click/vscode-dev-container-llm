@@ -1,10 +1,14 @@
 #!/bin/bash
+set -e  # Exit on error
+set -o pipefail  # Fail if any command in pipeline fails
 
 # This script prepares a linux environment for NVIDIA GPU support in Docker. Supports with WSL2 and native linux environments
 
-# Add Docker's official GPG key:
+# Update package lists once at the start
 sudo apt update
-sudo apt install ca-certificates curl
+
+# Add Docker's official GPG key:
+sudo apt install -y ca-certificates curl gnupg2
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -21,13 +25,7 @@ EOF
 sudo apt update
 
 # Install Docker Engine and related components:
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin pciutils nvidia-utils-590
-
-# Get some required binaries (if not already installed):
-sudo apt-get update && sudo apt-get upgrade && sudo apt-get install -y --no-install-recommends \
-   ca-certificates \
-   curl \
-   gnupg2
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin pciutils
 
 # Add the NVIDIA package repositories:
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
