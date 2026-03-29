@@ -25,7 +25,7 @@ Additional requirements:
 ## Quick Start
 
 1. **Install Prerequisites**
-   - **Docker** - Follow the [official Docker installation guide](https://docs.docker.com/get-docker/) OR use the `prep-docker-nvidia.sh` script (see GPU Setup section below)
+   - **Docker** - Use the `prep-docker-nvidia.sh` script (see GPU Setup section below) OR follow the [official Docker installation guide](https://docs.docker.com/get-docker/) OR 
    - [VS Code](https://code.visualstudio.com/)
    - [Dev Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
@@ -42,6 +42,7 @@ Additional requirements:
 
 - **Pre-configured Ubuntu environment** with all LLM tooling installed
 - **Ollama integration** for easy model management and serving
+- **OpenCode** for terminal-based coding tasks 
 - **GPU acceleration support** (NVIDIA Container Toolkit)
 - **Node.js/npm** for JavaScript/TypeScript LLM applications
 - **Pulumi infrastructure** for deployment automation *(coming soon)*
