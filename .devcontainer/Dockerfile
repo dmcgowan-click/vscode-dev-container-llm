@@ -40,7 +40,7 @@ RUN groupadd -f docker && usermod -aG docker ${DEV_USER}
 
 # Script to run some critical functions at startup that can't managed within the Dockerfile
 COPY ${DEV_CONTAINER_PATH}/init.sh /usr/local/share/init.sh
-RUN chmod +x /usr/local/share/init.sh
+RUN chmod +rx /usr/local/share/init.sh
 
 # NVIDIA Container Toolkit Installation Steps
 ## Add the package repositories
