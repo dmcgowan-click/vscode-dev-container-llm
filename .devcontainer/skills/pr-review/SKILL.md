@@ -49,9 +49,8 @@ All operations must use the **active branch** of the current session
 
 Create a new PR from the active branch
 
-1. Create a title for the PR. Format should be : `[TYPE] - [Short Description]`, where:
-  - If the word `fix` appears in the PR, `[TYPE]` should be `FIX`
-  - If the word `feature` or `feat` appears in the PR, `[TYPE]` should be `FEATURE`
+1. Create a title for the PR. Format should be : `[TYPE] [Short Description]`, where:
+  - Based on the summary, `[TYPE]` should be either `fix:`, `feat:`, or `chore:`
   - If neither, prompt the user if this is a feature or fix
 2. Add the summary of changes to the PR description
 
