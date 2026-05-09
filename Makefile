@@ -2,7 +2,7 @@
 
 WORK_DIR := /home/ubuntu/workspace
 PULUMI_DIR := $(WORK_DIR)/pulumi
-PULUMI_STACK ?= org
+PULUMI_STACK ?= organization/devops/org
 export PULUMI_CONFIG_PASSPHRASE :=
 
 # Docker image settings
@@ -42,10 +42,11 @@ state_backup: prepare
 build_push: prepare
 	$(eval GCP_PROJECT := $(shell cd $(PULUMI_DIR) && pulumi stack output projectIdOutput -s $(PULUMI_STACK)))
 	$(eval GCP_REGION := $(shell cd $(PULUMI_DIR) && pulumi config get devops:gcpRegion -s $(PULUMI_STACK)))
-	$(eval REGISTRY := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/devtools)
-	@echo "Verifying Artifact Registry 'devtools' exists..."
-	@gcloud artifacts repositories describe devtools --project=$(GCP_PROJECT) --location=$(GCP_REGION) > /dev/null 2>&1 || \
-		{ echo "ERROR: Artifact Registry 'devtools' not found in project '$(GCP_PROJECT)', region '$(GCP_REGION)'. Run 'make up' first."; exit 1; }
+	$(eval REPO_NAME := $(shell cd $(PULUMI_DIR) && pulumi stack output devtoolsRepository -s $(PULUMI_STACK) | awk -F/ '{print $$NF}'))
+	$(eval REGISTRY := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(REPO_NAME))
+	@echo "Verifying Artifact Registry '$(REPO_NAME)' exists..."
+	@gcloud artifacts repositories describe $(REPO_NAME) --project=$(GCP_PROJECT) --location=$(GCP_REGION) > /dev/null 2>&1 || \
+		{ echo "ERROR: Artifact Registry '$(REPO_NAME)' not found in project '$(GCP_PROJECT)', region '$(GCP_REGION)'. Run 'make up' first."; exit 1; }
 	@gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
 	@echo "Building $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)..."
 	docker build -t $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG) -f $(DOCKERFILE_PATH) --build-arg DEV_CONTAINER_PATH=.devcontainer .
