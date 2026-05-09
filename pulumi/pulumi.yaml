@@ -1,3 +1,6 @@
 name: devops
+runtime: nodejs
+main: index.ts
 config:
-  noname: true
+  devops:stackScope:
+    default: "org"

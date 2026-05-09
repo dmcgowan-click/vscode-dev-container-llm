@@ -1,0 +1,10 @@
+encryptionsalt: v1:Q+pNoBgCyjM=:v1:YM1F6/EUl56xqjsc:eKRvcMjpuXaVX2GKWmRw4S655U639A==
+config:
+  devops:stackEnv: "common"
+  devops:gcpOrgId: "767323763487"
+  devops:gcpOrgName: dmcgowan.click
+  devops:gcpBillingAccountId: "018F5D-378D01-9762F6"
+  devops:gcpRegion: australia-southeast1
+  devops:gcpApis:
+    - artifactregistry.googleapis.com
+    - storage.googleapis.com

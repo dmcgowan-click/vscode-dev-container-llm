@@ -51,6 +51,7 @@
 		//"source=vscode-server,target=/home/mrdev/.vscode-server,type=volume",
 		"source=bash_history,target=/home/ubuntu/.bash_history,type=volume",
 		"source=local,target=/home/ubuntu/.local,type=volume",
+		"source=pulumi,target=/home/ubuntu/.pulumi,type=volume"
 	],
 
 	// Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.

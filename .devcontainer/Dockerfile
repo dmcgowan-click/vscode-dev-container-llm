@@ -11,10 +11,13 @@ ARG DEV_CONTAINER_PATH="."
 #Nvidia Container Toolkit Version Argument - Update this as needed to ensure you have the latest version, or to pin to a specific version for stability. Check https://nvidia.github.io/libnvidia-container/ for the latest versions.
 ARG NVIDIA_CONTAINER_TOOLKIT_VERSION=1.18.2-1
 
+#Set Pulumi passphrase to empty for local state backend
+ENV PULUMI_CONFIG_PASSPHRASE=""
+
 #Update and install pre-requisite binaries 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y sudo nano curl git ca-certificates build-essential python3 python3-pip jq yq zstd gnupg2 nvidia-utils-590
+    && apt-get install -y sudo nano curl git ca-certificates build-essential python3 python3-pip jq yq zstd gnupg2 nvidia-utils-590 rsync
 
 # Docker Installation Steps
 ## Add Docker's official GPG key
@@ -102,9 +105,16 @@ RUN echo "${DEV_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${DEV_USER}
 #Set this to the active user
 USER ${DEV_USER}
 
+#Install Pulumi
+RUN curl -fsSL https://get.pulumi.com | sh \
+    && echo "export PATH=\"/home/ubuntu/.pulumi/bin:\$PATH\"" >> /home/ubuntu/.bashrc
+
 #Install Opencode AI for custom model interaction (I think?! I'm new to this!)
 #Must be installed under the non priviledged developer user
 RUN curl -fsSL https://opencode.ai/install | bash
+
+# Copy skills to Claude config
+COPY ${DEV_CONTAINER_PATH}/skills/ /home/${DEV_USER}/.claude/skills/
 
 #WARNING: All steps below are manadatory for this to work as a dev container ... period. If you miss these steps, you will just get an useless error message
 #         Ensure all steps run as the non priviledged developer user.
@@ -117,7 +127,8 @@ RUN mkdir -p \
     /home/${DEV_USER}/.ssh \
     /home/${DEV_USER}/.vscode \
     /home/${DEV_USER}/.vscode-server \
-    /home/${DEV_USER}/.ollama
+    /home/${DEV_USER}/.ollama \
+    /home/${DEV_USER}/.pulumi
 
 #Prep required files
 RUN touch /home/${DEV_USER}/.gitconfig \
