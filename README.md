@@ -2,6 +2,8 @@
 
 A ready-to-use development container optimized for running pre-trained LLM models locally using VS Code and Ollama. This repository provides everything you need to run large language models on your machine without relying on cloud APIs. Ollama is pre-installed and will run automatically when you open the dev container.
 
+Now also includes Pulumi code to create a GCP project with an Artifact Registry, allowing you to build and store container images for use in future projects.
+
 ## What This Is
 
 This is a containerized development environment designed for developers who want to:
@@ -64,12 +66,74 @@ This script handles everything you need:
 
 **Note:** This script is the recommended way to set up your environment. It will prepare your Linux system (WSL2 or native) for local LLM development with GPU acceleration. No additional manual Docker or NVIDIA setup is required.
 
+## Infrastructure (Pulumi)
+
+The `pulumi/` directory contains IaC that provisions a GCP project with an Artifact Registry for storing container images. Once deployed, you can build the dev container image and push it to the registry for reuse across future projects.
+
+### What It Creates
+
+- A GCP folder and project (e.g. `cicd-XXXX`)
+- An Artifact Registry Docker repository (`devtools`)
+- A Cloud Storage bucket for Pulumi state backups (versioned)
+
+### Setup
+
+1. **Authenticate with GCP**
+
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+
+2. **Login to Pulumi (local backend)**
+
+   ```bash
+   make login_local
+   ```
+
+   Or to use a GCS backend:
+
+   ```bash
+   PULUMI_GCP_BUCKET=your-bucket make login_gcp
+   ```
+
+3. **Configure the stack**
+
+   Edit `pulumi/Pulumi.org.yaml` to set your GCP org ID, billing account, and region.
+
+4. **Preview and deploy**
+
+   ```bash
+   make preview
+   make up
+   ```
+
+5. **Build and push the dev container image**
+
+   ```bash
+   make build_push
+   ```
+
+   This builds the dev container image and pushes it to the Artifact Registry created by Pulumi. The image is tagged `latest` on the `main` branch, or with the branch name otherwise.
+
+6. **Backup Pulumi state**
+
+   ```bash
+   make state_backup
+   ```
+
+   Copies the Pulumi state file to the GCS bucket created by the stack.
+
 ## Project Structure
 
 ```
 .devcontainer/     # Dev container configuration
-pulumi/            # Infrastructure as code (coming soon)
-node_modules/      # Dependencies (auto-installed)
+pulumi/            # Infrastructure as code (GCP project, Artifact Registry, state bucket)
+  modules/         # Reusable Pulumi components
+  index.ts         # Main stack definition
+  Pulumi.yaml      # Pulumi project config
+  Pulumi.org.yaml  # Stack-specific config (GCP org, billing, region)
+Makefile           # Build, deploy, and image push commands
 README.md          # This file
 ```
 
