@@ -17,7 +17,7 @@ ENV PULUMI_CONFIG_PASSPHRASE=""
 #Update and install pre-requisite binaries 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y sudo nano curl git ca-certificates build-essential python3 python3-pip jq yq zstd gnupg2 nvidia-utils-590 rsync
+    && apt-get install -y sudo nano curl git ca-certificates build-essential python3 python3-pip jq yq zstd gnupg2 nvidia-utils-590 rsync unzip
 
 # Docker Installation Steps
 ## Add Docker's official GPG key
@@ -63,12 +63,17 @@ RUN apt-get install -y \
 ## Configure the NVIDIA Container Toolkit to use the Docker runtime
 RUN nvidia-ctk runtime configure --runtime=docker
 
-# Install Gcloud
+# Install GCloud
 #IMPORTANT: Public key is not found and packages fail to download UNLESS I add the following "gpg --dearmor". Worked for Hashicorp!
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \ 
     && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor | tee /usr/share/keyrings/cloud.google.gpg \
     && apt-get update \
     && apt-get install -y google-cloud-cli google-cloud-cli-cloud-run-proxy
+
+# Install AWSCLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install
 
 #Install nodejs and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - \
