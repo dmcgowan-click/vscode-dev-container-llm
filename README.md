@@ -48,6 +48,7 @@ Additional requirements:
 - **GPU acceleration support** (NVIDIA Container Toolkit)
 - **Node.js/npm** for JavaScript/TypeScript LLM applications
 - **Pulumi infrastructure** for deployment automation *(coming soon)*
+- **Cloud CLIs** (GCloud, AWS CLI) pre-installed for cloud workflows
 - **Development tools** (git, ssh, docker) pre-configured
 
 ## GPU Setup (Optional but Recommended)
