@@ -46,6 +46,7 @@
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/ubuntu/.gitconfig,type=bind,consistency=cached",
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gcloud,target=/home/ubuntu/.config/gcloud,type=bind,consistency=cached",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/ubuntu/.aws,type=bind,consistency=cached"
 		"source=vscode,target=/home/ubuntu/.vscode,type=volume",
 		"source=ollama,target=/home/ubuntu/.ollama,type=volume",
 		//"source=vscode-server,target=/home/mrdev/.vscode-server,type=volume",

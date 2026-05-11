@@ -129,6 +129,7 @@ RUN mkdir -p \
     /home/${DEV_USER}/.bash_history \
     /home/${DEV_USER}/.local \
     /home/${DEV_USER}/.config/gcloud \
+    /home/${DEV_USER}/.aws \
     /home/${DEV_USER}/.ssh \
     /home/${DEV_USER}/.vscode \
     /home/${DEV_USER}/.vscode-server \
