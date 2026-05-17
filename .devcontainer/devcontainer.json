@@ -48,7 +48,7 @@
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gcloud,target=/home/ubuntu/.config/gcloud,type=bind,consistency=cached",
 		"source=vscode,target=/home/ubuntu/.vscode,type=volume",
 		"source=ollama,target=/home/ubuntu/.ollama,type=volume",
-		//"source=vscode-server,target=/home/mrdev/.vscode-server,type=volume",
+		"source=vscode-server,target=/home/ubuntu/.vscode-server,type=volume",
 		"source=bash_history,target=/home/ubuntu/.bash_history,type=volume",
 		"source=local,target=/home/ubuntu/.local,type=volume",
 		"source=pulumi,target=/home/ubuntu/.pulumi,type=volume"
