@@ -89,13 +89,13 @@ The `pulumi/` directory contains IaC that provisions a GCP project with an Artif
 2. **Login to Pulumi (local backend)**
 
    ```bash
-   make login_local
+   make login-local
    ```
 
    Or to use a GCS backend:
 
    ```bash
-   PULUMI_GCP_BUCKET=your-bucket make login_gcp
+   PULUMI_GCP_BUCKET=your-bucket make login-gcp
    ```
 
 3. **Configure the stack**
@@ -105,22 +105,29 @@ The `pulumi/` directory contains IaC that provisions a GCP project with an Artif
 4. **Preview and deploy**
 
    ```bash
-   make preview
-   make up
+   make preview-infra
+   make up-infra
    ```
 
 5. **Build and push the dev container image**
 
    ```bash
-   make build_push
+   make build
+   make deploy-gcp-artifact
    ```
 
-   This builds the dev container image and pushes it to the Artifact Registry created by Pulumi. The image is tagged `latest` on the `main` branch, or with the branch name otherwise.
+   `build` creates the image locally. `deploy-gcp-artifact` tags and pushes it to the Artifact Registry created by Pulumi. The image is tagged `latest` on the `main` branch, or with the branch name otherwise.
+
+   To push to Docker Hub instead:
+
+   ```bash
+   DOCKER_HUB_USER=dmcgowan3e7a DOCKER_HUB_TOKEN=<token> make deploy-docker-hub
+   ```
 
 6. **Backup Pulumi state**
 
    ```bash
-   make state_backup
+   make state-backup
    ```
 
    Copies the Pulumi state file to the GCS bucket created by the stack.
@@ -134,7 +141,7 @@ pulumi/            # Infrastructure as code (GCP project, Artifact Registry, sta
   index.ts         # Main stack definition
   Pulumi.yaml      # Pulumi project config
   Pulumi.org.yaml  # Stack-specific config (GCP org, billing, region)
-Makefile           # Build, deploy, and image push commands
+Makefile           # Build, deploy, and image push commands (run `make help` for all targets)
 README.md          # This file
 ```
 
