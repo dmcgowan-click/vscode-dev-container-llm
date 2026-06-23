@@ -57,6 +57,12 @@ deploy-gcp-artifact: build prepare-infra ## Push Docker image to GCP Artifact Re
 	docker push $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 deploy-docker-hub: build ## Push Docker image to Docker Hub
+ifndef DOCKER_HUB_USER
+	$(error DOCKER_HUB_USER is not set. Usage: DOCKER_HUB_USER=<user> DOCKER_HUB_TOKEN=<token> make deploy-docker-hub)
+endif
+ifndef DOCKER_HUB_TOKEN
+	$(error DOCKER_HUB_TOKEN is not set. Usage: DOCKER_HUB_USER=<user> DOCKER_HUB_TOKEN=<token> make deploy-docker-hub)
+endif
 	@echo "Logging in to Docker Hub..."
 	@echo "$(DOCKER_HUB_TOKEN)" | docker login -u "$(DOCKER_HUB_USER)" --password-stdin
 	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(DOCKER_HUB_REPO):$(IMAGE_TAG)
