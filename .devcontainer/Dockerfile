@@ -17,7 +17,7 @@ ENV PULUMI_CONFIG_PASSPHRASE=""
 #Update and install pre-requisite binaries 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y sudo nano curl git ca-certificates build-essential python3 python3-pip jq yq zstd gnupg2 nvidia-utils-590 rsync unzip
+    && apt-get install -y build-essential ca-certificates curl gh git gnupg2 jq nano nvidia-utils-590 python3 python3-pip rsync sudo unzip yq zstd
 
 # Docker Installation Steps
 ## Add Docker's official GPG key
@@ -103,6 +103,9 @@ stdout_logfile=/var/log/supervisor/ollama.out.log
 environment=OLLAMA_MAX_LOADED_MODELS="2",OLLAMA_NUM_GPU=1,OLLAMA_CONTEXT_LENGTH=128000,HOME=/home/ubuntu/
 EOF
 
+#Install Opencode AI for custom model interaction (I think?! I'm new to this!)
+RUN npm install -g opencode-ai
+
 # Add non priviledged user but give sudo access
 # RUN useradd -m ${DEV_USER} #Keeping for historical reasons, default user of ubuntu is now used
 RUN echo "${DEV_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${DEV_USER}
@@ -113,10 +116,6 @@ USER ${DEV_USER}
 #Install Pulumi
 RUN curl -fsSL https://get.pulumi.com | sh \
     && echo "export PATH=\"/home/ubuntu/.pulumi/bin:\$PATH\"" >> /home/ubuntu/.bashrc
-
-#Install Opencode AI for custom model interaction (I think?! I'm new to this!)
-#Must be installed under the non priviledged developer user
-RUN curl -fsSL https://opencode.ai/install | bash
 
 # Copy skills to Claude config
 COPY ${DEV_CONTAINER_PATH}/skills/ /home/${DEV_USER}/.claude/skills/
