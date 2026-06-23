@@ -49,6 +49,7 @@ Additional requirements:
 - **Node.js/npm** for JavaScript/TypeScript LLM applications
 - **Pulumi infrastructure** for deployment automation *(coming soon)*
 - **Cloud CLIs** (GCloud, AWS CLI) pre-installed for cloud workflows
+- **GitHub CLI** (`gh`) for managing PRs, issues, and repos from the terminal
 - **Development tools** (git, ssh, docker) pre-configured
 
 ## GPU Setup (Optional but Recommended)
