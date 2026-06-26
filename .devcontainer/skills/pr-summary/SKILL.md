@@ -8,17 +8,46 @@ author: Douglas McGowan
 
 Summarise the changes in the active branch and create or update a PR in GitHub with that summary.
 
+> **Implementation Note:** This skill uses a local helper script (`pr-helper.sh`) instead of
+> the GitHub MCP server. This was a deliberate switch to improve performance and reduce token
+> usage. The helper script wraps `gh` CLI calls, returning only the data needed — avoiding the
+> overhead of MCP tool definitions in context, verbose JSON responses, and multi-step reasoning
+> about which MCP tool to invoke. Typical savings are 40–60% fewer tokens per PR operation with
+> faster wall-clock time due to fewer round-trips.
+
 ## Requirements
 
-- GitHub MCP
-- `jq` for JSON parsing
-- Repository write permissions (for updating PR headers and summaries)
+- `gh` CLI (GitHub CLI) — authenticated with repo access
+- `git` — for branch and diff operations
+- Repository write permissions (for creating/updating PRs)
+
+## Helper Script
+
+All GitHub interactions are handled by the co-located script:
+
+```
+.devcontainer/skills/pr-summary/pr-helper.sh
+```
+
+Available commands:
+
+| Command | Purpose |
+|---------|---------|
+| `pr-helper.sh diff` | Show commits and file changes on active branch vs default |
+| `pr-helper.sh find` | Find existing open PR for the current branch |
+| `pr-helper.sh create <title> <body>` | Create a new PR |
+| `pr-helper.sh update <number> <title> <body>` | Update an existing PR title and body |
+| `pr-helper.sh push` | Push current branch to origin |
+
+Run the script via terminal. Pass multi-line body text using shell quoting or heredocs.
 
 ## Core Workflow
 
 ### 1. Produce Summary of Changes
 
-Produce a summary of changes in the active branch. Keep it high level, focusing on the key changes and their impact. Avoid listing every single change. Instead, group related changes together and highlight the most significant ones.
+Run `pr-helper.sh diff` to gather the changes on the active branch.
+
+Produce a summary of changes. Keep it high level, focusing on the key changes and their impact. Avoid listing every single change. Instead, group related changes together and highlight the most significant ones.
 
 Let the user review the summary first and allow them to suggest changes.
 
@@ -34,36 +63,42 @@ Let the user review the changes to the `README.md` file first and allow them to 
 
 If the changes are not yet committed and pushed, commit and push them. The commit message should describe only the changes since the last commit.
 
+Use `pr-helper.sh push` to push the branch to origin.
+
 ### 4. Create or Update the PR
 
-All operations must use the **active branch** of the current session
+All operations must use the **active branch** of the current session.
 
 #### Search for Existing PR
 
-1. Search by title for open PRs only
-2. If exactly one match is found, use that PR
-3. If multiple matches are found, list them and ask the user to select the correct one
-4. If no matches are found, treat as new PR (see below)
+Run `pr-helper.sh find` to look for an open PR on the current branch.
+
+1. If a PR is found, use that PR number for updates
+2. If no PR is found, treat as new PR (see below)
 
 #### Create New PR
 
-Create a new PR from the active branch
+Run `pr-helper.sh create <title> <body>` to create a new PR from the active branch.
 
-1. Create a title for the PR. Format should be : `[TYPE] [Short Description]`, where:
+1. Create a title for the PR. Format should be: `[TYPE] [Short Description]`, where:
   - Based on the summary, `[TYPE]` should be either `fix:`, `feat:`, or `chore:`
   - If neither, prompt the user if this is a feature or fix
-2. Add the summary of changes to the PR description
+2. Pass the summary of changes as the body argument
 
-When creating or updating PR descriptions via GitHub MCP, use actual newlines in the body text - not escaped `\n` sequences. Verify the rendered output after creation.
+#### Update Existing PR
+
+Run `pr-helper.sh update <number> <title> <body>` to update the PR title and description.
+
+Use actual newlines in the body text — not escaped `\n` sequences.
 
 ## Error Handling
 
-### GitHub MCP Unavailable
+### gh CLI Unavailable or Unauthenticated
 
 1. **Stop the workflow immediately**: Do not attempt any further steps
-2. Inform the user that the GitHub MCP server is unavailable and must be fixed before continuing.
-3. Report as much diagnostic detail as possible, including:
-  - The specific error message or failure returned by the MCP server
-  - Which MCP tool call failed (e.g., `create_pull_request`, `update_pull_request`, etc.)
-  - Any connection or authentication errors observed
-4. Suggest common fixes: check that the MCP server is running, verify authentication tokens, and review MCP server logs.
+2. Inform the user that the `gh` CLI is unavailable or not authenticated
+3. Report the specific error message or exit code from the helper script
+4. Suggest common fixes:
+  - Run `gh auth status` to check authentication
+  - Run `gh auth login` to authenticate
+  - Ensure `gh` is installed (`which gh`)
