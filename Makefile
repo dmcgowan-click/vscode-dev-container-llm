@@ -63,6 +63,10 @@ endif
 ifndef DOCKER_HUB_TOKEN
 	$(error DOCKER_HUB_TOKEN is not set. Usage: DOCKER_HUB_USER=<user> DOCKER_HUB_TOKEN=<token> make deploy-docker-hub)
 endif
+	@if [ -f "$(HOME)/.docker/config.json" ]; then \
+		tmp=$$(jq 'del(.credsStore) | del(.credHelpers)' "$(HOME)/.docker/config.json" 2>/dev/null) && \
+		echo "$$tmp" > "$(HOME)/.docker/config.json"; \
+	fi
 	@echo "Logging in to Docker Hub..."
 	@echo "$(DOCKER_HUB_TOKEN)" | docker login -u "$(DOCKER_HUB_USER)" --password-stdin
 	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(DOCKER_HUB_REPO):$(IMAGE_TAG)
