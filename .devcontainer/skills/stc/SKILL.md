@@ -33,15 +33,18 @@ If not decipherable from the user input, prompt the user for the following input
 * STC type
   * Module
   * Stack
-* STC Name
-  * The name of the STC definition to read. This corresponds to a `### <Name>` header within the STC files (e.g., `### IAM`, `### Identity`).
-    * All STCs must fall under a parent header of `## Stacks` or `## Modules`. Report back to the user if this is not the case, and halt workflow until the STC is corrected.
 * STC Action
-  * Ensure when reviewing and actioning, all parent headers in the STC are read for global instructions that apply to all child definitions. For example, `## Modules` applies to all module definitions beneath it, `# Standard Template Constructs` applies to every definition in the file.
-  * Review
-    * Review the STC, report back on potential ambiguity or design issues, and suggest improvements
-  * Generate
-    * Generate (or replace) code based on the STC
+  * Ensure when reviewing, aligning and generating, all parent headers in the STC are read for global instructions that apply to all child definitions. For example, `## Modules` applies to all module definitions beneath it, `# Standard Template Constructs` applies to every definition in the file.
+  * For reviewing and generating
+    * The name of the STC definition to read. This corresponds to a `### <Name>` header within the STC files (e.g., `### IAM`, `### Identity`).
+      * All STCs must fall under a parent header of `## Stacks` or `## Modules`. Report back to the user if this is not the case, and halt workflow until the STC is corrected.
+    * Review
+      * Review the STC, report back on potential ambiguity or design issues, and suggest improvements
+    * Generate
+      * Generate (or replace) code based on the STC
+  * For aligning
+    * Alignment
+      * Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies
 
 ### 3. Action STC
 
@@ -72,7 +75,29 @@ Once STC is acceptably reviewed, generate code based on the STC:
    * Module → `modules/<name>/` (e.g., `### IAM` → `modules/iam/`)
 2. **Replace existing code** — If the target path already exists, warn the user and confirm, then **replace** the code entirely. Generation is a full replacement, not a merge.
 3. **Prompt for environment-specific inputs** — Collect any values the STC cannot predefine (e.g., organisation ID, domain name, project ID). Present these as a clear list before generating.
-4. **Generate code** — Create the directory structure and files, including `package.json` and any config files as specified by the STC. Follow conventions from existing sibling stacks/modules in the repo.
+4. **Populate config YAML** — Generate `Pulumi.<env>.yaml` files for the stack:
+   * Where the STC defines config keys, populate them with the real values collected in step 3 in `Pulumi.<env>.yaml`. Where existing `Pulumi.<env>.yaml` files have real key/values, preserve them.
+   * Also generate a `Pulumi.<env>.sample.yaml` with the same keys as `Pulumi.<env>.yaml` but all values as placeholders.
+5. **Generate code** — Create the directory structure and files, including `package.json` and any config files as specified by the STC. Follow conventions from existing sibling stacks/modules in the repo.
+
+#### If action is alignment
+
+Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies in:
+
+* Input field naming and types (e.g. `pulumi.Input<string>` usage)
+* Validation patterns (e.g. "validation deferred to API" vs explicit checks)
+* Return structure conventions
+* Common field handling (e.g. `bindings`, `labels`/`tags`, target parent fields)
+
+**Output:** A comparison table showing the discrepancy and a suggested standardisation. After presenting findings, offer the user to apply the suggested changes to the STC definitions.
+
+**Example:**
+
+| Field | Module `folder` | Module `project` | Suggestion |
+|-------|----------------|------------------|------------|
+| Input Types | `organisation`, `folder` as `Input<string>` | `organisation`, `folder`, `billing` as `Input<string>` | Consistent — no change needed |
+| Validation caveat | Present | Present | Aligned |
+| `name` validation | 3–30 chars | 1–25 chars (reserving postfix) | Both valid — domain-specific rules, no change needed |
 
 ## Naming Conventions
 
