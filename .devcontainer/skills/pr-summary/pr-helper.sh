@@ -47,7 +47,8 @@ case "${1:-help}" in
     PR_NUMBER="${2:?Error: PR number required}"
     TITLE="${3:?Error: title required}"
     BODY="${4:?Error: body required}"
-    gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY" 2>&1
+    gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER" --method PATCH \
+      -f title="$TITLE" -f body="$BODY" --jq '.html_url' 2>&1
     ;;
 
   push)
