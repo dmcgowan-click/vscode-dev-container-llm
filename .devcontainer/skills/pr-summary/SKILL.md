@@ -1,104 +1,116 @@
 ---
-name: pr-summary
-description: Workflow for producing an AI generated summary for review, then creating a new PR or updating an existing PR with the summary. Also set the title to follow desired format. Triggers include "summarise changes", "produce summary"
+name: stc
+description: Workflow for reading a standard template construct (STC) based on user inputs, and based on these inputs, either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc. Triggers include "stc", "standard construct template", "review stc", "trigger stc"
 author: Douglas McGowan
 ---
 
-# PR Summary Workflow
+# STC Workflow
 
-Summarise the changes in the active branch and create or update a PR in GitHub with that summary.
-
-> **Implementation Note:** This skill uses a local helper script (`pr-helper.sh`) instead of
-> the GitHub MCP server. This was a deliberate switch to improve performance and reduce token
-> usage. The helper script wraps `gh` CLI calls, returning only the data needed — avoiding the
-> overhead of MCP tool definitions in context, verbose JSON responses, and multi-step reasoning
-> about which MCP tool to invoke. Typical savings are 40–60% fewer tokens per PR operation with
-> faster wall-clock time due to fewer round-trips.
+Locate a STC based on inputs and either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc
 
 ## Requirements
 
-- `gh` CLI (GitHub CLI) — authenticated with repo access
-- `git` — for branch and diff operations
-- Repository write permissions (for creating/updating PRs)
+Read / Write permissions to the `stc` folder. Typically located within the root of your repo, but locations can vary
 
-## Helper Script
+## Helper Scripts
 
-All GitHub interactions are handled by the co-located script:
-
-```
-~/.claude/skills/pr-summary/pr-helper.sh
-```
-
-Available commands:
-
-| Command | Purpose |
-|---------|---------|
-| `pr-helper.sh diff` | Show commits and file changes on active branch vs default |
-| `pr-helper.sh find` | Find existing open PR for the current branch |
-| `pr-helper.sh create <title> <body>` | Create a new PR |
-| `pr-helper.sh update <number> <title> <body>` | Update an existing PR title and body |
-| `pr-helper.sh push` | Push current branch to origin |
-
-Run the script via terminal. Pass multi-line body text using shell quoting or heredocs.
+None yet defined
 
 ## Core Workflow
 
-### 1. Produce Summary of Changes
+### 1. Locate STC folder and read definitions
 
-Run `pr-helper.sh diff` to gather the changes on the active branch.
+Search for an `stc` folder within the repo. If a folder is not found, prompt the user to provide a path to the `stc` folder.
 
-Produce a summary of changes. Keep it high level, focusing on the key changes and their impact. Avoid listing every single change. Instead, group related changes together and highlight the most significant ones.
+Once located, read global context:
+* Always read `stc/GLOBAL.md` — contains language, Pulumi requirements, and conventions referenced by all definitions.
 
-Let the user review the summary first and allow them to suggest changes.
+Then read the specific STC definition:
+* **Split structure** (preferred): If `stc/stacks/` and `stc/modules/` directories exist, read only the targeted definition file:
+  * Stack → `stc/stacks/<name>.md` (e.g., `### Organisation` → `stc/stacks/organisation.md`)
+  * Module → `stc/modules/<name>.md` (e.g., `### IAM` → `stc/modules/iam.md`)
+* **Monolithic fallback**: If split files do not exist, search for `DRAFT.md` or `DETAIL.md` in the `stc` folder. Read all that exist and combine their content to form the full STC catalogue.
 
-### 2. Update README.md (optional)
+For the **alignment** action, read all files under `stc/stacks/` or `stc/modules/` (based on type) rather than a single definition.
 
-Based on the changes found, update the `README.md` file in the repository to reflect any new features, changes, or important information that should be included.
+### 2. Confirm STC type, name and action
 
-Let the user review the changes to the `README.md` file first and allow them to suggest changes.
+If not decipherable from the user input, prompt the user for the following inputs:
 
-> **Future Enhancement** Standardize README structure in this skill to ensure consistency across all repos.
+* STC type
+  * Module
+  * Stack
+* STC Action
+  * Ensure when reviewing, aligning and generating, all parent headers in the STC are read for global instructions that apply to all child definitions. For example, `## Modules` applies to all module definitions beneath it, `# Standard Template Constructs` applies to every definition in the file.
+  * For reviewing and generating
+    * The name of the STC definition to read. This corresponds to a `### <Name>` header within the STC files (e.g., `### IAM`, `### Identity`).
+      * All STCs must fall under a parent header of `## Stacks` or `## Modules`. Report back to the user if this is not the case, and halt workflow until the STC is corrected.
+    * Review
+      * Review the STC, report back on potential ambiguity or design issues, and suggest improvements
+    * Generate
+      * Generate (or replace) code based on the STC
+  * For aligning
+    * Alignment
+      * Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies
 
-### 3. Commit and Push
+### 3. Action STC
 
-If the changes are not yet committed and pushed, commit and push them. The commit message should describe only the changes since the last commit.
+#### If action is review
 
-Use `pr-helper.sh push` to push the branch to origin.
+Review the STC, report back on potential ambiguity or design issues, and suggest improvements. Offer to edit the STC definition to make these updates.
 
-### 4. Create or Update the PR
+The ideal state is where AI can create the codebase from the STC with minimal user inputs and will consistently create the codebase the same way based on the STC definition.
 
-All operations must use the **active branch** of the current session.
+The STC definition should be self-sufficient to determine:
+* The programming language to use
+* The target code location (derived from naming conventions below)
+* Required dependencies / `package.json` contents (if applicable)
+* Parent folder structure
 
-#### Search for Existing PR
+If any of these cannot be determined from the STC, flag it as a review finding and suggest how to make the definition explicit.
 
-Run `pr-helper.sh find` to look for an open PR on the current branch.
+Additional Context:
 
-1. If a PR is found, use that PR number for updates
-2. If no PR is found, treat as new PR (see below)
+* Sensible environment-specific inputs (org ID, domain, project ID, etc.) are fine — these can never be predefined and will be unique to each environment. Do not flag as a review item
+* Checking actual generated source code and config files is valid for the purpose of diff, but don't flag discrepancies as a review finding — the STC is the source of truth, not the generated code. The generated code may be out of date or have been modified by hand, so it is not a reliable source of truth.
 
-#### Create New PR
+#### If action is generate
 
-Run `pr-helper.sh create <title> <body>` to create a new PR from the active branch.
+Review the STC, if potential ambiguity or design issues, report back and offer to perform a `review` action first.
 
-1. Create a title for the PR. Format should be: `[TYPE] [Short Description]`, where:
-  - Based on the summary, `[TYPE]` should be either `fix:`, `feat:`, or `chore:`
-  - If neither, prompt the user if this is a feature or fix
-2. Pass the summary of changes as the body argument
+Once STC is acceptably reviewed, generate code based on the STC:
 
-#### Update Existing PR
+1. **Determine output path** — Derive from the STC type and name using the naming conventions below:
+   * Stack → `stacks/<name>/` (e.g., `### Identity` → `stacks/identity/`)
+   * Module → `modules/<name>/` (e.g., `### IAM` → `modules/iam/`)
+2. **Replace existing code** — If the target path already exists, warn the user and confirm, then **replace** the code entirely. Generation is a full replacement, not a merge.
+3. **Prompt for environment-specific inputs** — Collect any values the STC cannot predefine (e.g., organisation ID, domain name, project ID). Present these as a clear list before generating.
+4. **Populate config YAML** — Generate `Pulumi.<env>.yaml` files for the stack:
+   * Where the STC defines config keys, populate them with the real values collected in step 3 in `Pulumi.<env>.yaml`. Where existing `Pulumi.<env>.yaml` files have real key/values, preserve them.
+   * Also generate a `Pulumi.<env>.sample.yaml` with the same keys as `Pulumi.<env>.yaml` but all values as placeholders.
+5. **Generate code** — Create the directory structure and files, including `package.json` and any config files as specified by the STC. Follow conventions from existing sibling stacks/modules in the repo.
 
-Run `pr-helper.sh update <number> <title> <body>` to update the PR title and description.
+#### If action is alignment
 
-Use actual newlines in the body text — not escaped `\n` sequences.
+Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies in:
 
-## Error Handling
+* Input field naming and types (e.g. `pulumi.Input<string>` usage)
+* Validation patterns (e.g. "validation deferred to API" vs explicit checks)
+* Return structure conventions
+* Common field handling (e.g. `bindings`, `labels`/`tags`, target parent fields)
 
-### gh CLI Unavailable or Unauthenticated
+**Output:** A comparison table showing the discrepancy and a suggested standardisation. After presenting findings, offer the user to apply the suggested changes to the STC definitions.
 
-1. **Stop the workflow immediately**: Do not attempt any further steps
-2. Inform the user that the `gh` CLI is unavailable or not authenticated
-3. Report the specific error message or exit code from the helper script
-4. Suggest common fixes:
-  - Run `gh auth status` to check authentication
-  - Run `gh auth login` to authenticate
-  - Ensure `gh` is installed (`which gh`)
+**Example:**
+
+| Field | Module `folder` | Module `project` | Suggestion |
+|-------|----------------|------------------|------------|
+| Input Types | `organisation`, `folder` as `Input<string>` | `organisation`, `folder`, `billing` as `Input<string>` | Consistent — no change needed |
+| Validation caveat | Present | Present | Aligned |
+| `name` validation | 3–30 chars | 1–25 chars (reserving postfix) | Both valid — domain-specific rules, no change needed |
+
+## Naming Conventions
+
+* `## Stacks` in the STC refers to the `stacks/` parent directory in the repo root
+* `## Modules` in the STC refers to the `modules/` parent directory in the repo root
+* `### <Name>` headers (e.g., `### Identity`, `### IAM`) map to a subfolder within the parent directory. Folder names are always **lowercase** (e.g., `### Identity` → `stacks/identity/`, `### Project` → `modules/project/`)
