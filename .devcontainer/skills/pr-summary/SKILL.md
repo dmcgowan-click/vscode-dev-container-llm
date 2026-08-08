@@ -26,7 +26,7 @@ Summarise the changes in the active branch and create or update a PR in GitHub w
 All GitHub interactions are handled by the co-located script:
 
 ```
-.devcontainer/skills/pr-summary/pr-helper.sh
+~/.claude/skills/pr-summary/pr-helper.sh
 ```
 
 Available commands:

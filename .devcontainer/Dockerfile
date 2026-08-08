@@ -146,6 +146,6 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/home/${DEV_U
 # Run some critical functions at startup that can't managed within the Dockerfile
 ENTRYPOINT [ "/usr/local/share/init.sh" ]
 
-# This must not be changed. This is needed to keep the container alive regardless of 
+# This must not be changed. This is needed to keep the container alive, otherwise it will terminate immediately after startup.
 CMD [ "sleep","infinity" ]
 WORKDIR /home/${DEV_USER}
