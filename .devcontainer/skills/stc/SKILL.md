@@ -22,9 +22,16 @@ None yet defined
 
 Search for an `stc` folder within the repo. If a folder is not found, prompt the user to provide a path to the `stc` folder.
 
-Once located, search for `DRAFT.md` or `DETAIL.md` within the `stc` folder. These are the STC definition files.
+Once located, read global context:
+* Always read `stc/GLOBAL.md` — contains language, Pulumi requirements, and conventions referenced by all definitions.
 
-> **NOTE:** The file structure is evolving — currently there may be one or both of these files. Read all that exist and combine their content to form the full STC catalogue.
+Then read the specific STC definition:
+* **Split structure** (preferred): If `stc/stacks/` and `stc/modules/` directories exist, read only the targeted definition file:
+  * Stack → `stc/stacks/<name>.md` (e.g., `### Organisation` → `stc/stacks/organisation.md`)
+  * Module → `stc/modules/<name>.md` (e.g., `### IAM` → `stc/modules/iam.md`)
+* **Monolithic fallback**: If split files do not exist, search for `DRAFT.md` or `DETAIL.md` in the `stc` folder. Read all that exist and combine their content to form the full STC catalogue.
+
+For the **alignment** action, read all files under `stc/stacks/` or `stc/modules/` (based on type) rather than a single definition.
 
 ### 2. Confirm STC type, name and action
 
@@ -62,7 +69,10 @@ The STC definition should be self-sufficient to determine:
 
 If any of these cannot be determined from the STC, flag it as a review finding and suggest how to make the definition explicit.
 
-NOTE: Sensible environment-specific inputs (org ID, domain, project ID, etc.) are fine — these can never be predefined and will be unique to each environment.
+Additional Context:
+
+* Sensible environment-specific inputs (org ID, domain, project ID, etc.) are fine — these can never be predefined and will be unique to each environment. Do not flag as a review item
+* Checking actual generated source code and config files is valid for the purpose of diff, but don't flag discrepancies as a review finding — the STC is the source of truth, not the generated code. The generated code may be out of date or have been modified by hand, so it is not a reliable source of truth.
 
 #### If action is generate
 
