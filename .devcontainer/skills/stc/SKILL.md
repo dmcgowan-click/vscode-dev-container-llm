@@ -1,6 +1,6 @@
 ---
 name: stc
-description: Workflow for reading a standard template construct (STC) based on user inputs, and based on these inputs, either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc. Triggers include "stc", "standard construct template", "review stc", "trigger stc"
+description: Workflow for reading a standard template construct (STC) based on user inputs, and based on these inputs, either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc. Triggers include "stc", "standard construct template", "review stc", "trigger stc", "retro stc"
 author: Douglas McGowan
 ---
 
@@ -49,6 +49,8 @@ If not decipherable from the user input, prompt the user for the following input
       * Review the STC, report back on potential ambiguity or design issues, and suggest improvements
     * Generate
       * Generate (or replace) code based on the STC
+    * Retro
+      * Update the STC to match the current codebase
   * For aligning
     * Alignment
       * Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies
@@ -108,6 +110,27 @@ Review all STC definitions under `## Modules` or `## Stacks` (based on type) and
 | Input Types | `organisation`, `folder` as `Input<string>` | `organisation`, `folder`, `billing` as `Input<string>` | Consistent — no change needed |
 | Validation caveat | Present | Present | Aligned |
 | `name` validation | 3–30 chars | 1–25 chars (reserving postfix) | Both valid — domain-specific rules, no change needed |
+
+#### If action is retro
+
+Update the STC definition to reflect the current state of the codebase. This is a one-way operation — the codebase is the source of truth.
+
+1. **Determine source path** — Derive from the STC type and name:
+   * Stack → `stacks/<name>/`
+   * Module → `modules/<name>/`
+2. **Locate existing code** — If the target path does not exist, warn the user and exit. Advise they need to generate first.
+3. **Read codebase** — Read `index.ts`, `package.json`, and `Pulumi.<env>.yaml` files from the source path.
+4. **Diff against STC** — Compare the codebase against the current STC definition. Present a summary of differences:
+   * Added fields/features in code not in STC
+   * Changed behaviour (e.g., different defaults, validation, merge logic)
+   * STC fields not implemented in code (flag as "specified but unimplemented")
+5. **Confirm and update** — After user confirms, update the STC definition to match the codebase:
+   * YAML input definition (fields, types, optionality)
+   * Dependencies
+   * Validation rules
+   * Requirements (logic, resource usage, module calls)
+   * Return section (outputs and types)
+   * Fields specified in STC but not implemented in code are **removed** (codebase wins)
 
 ## Naming Conventions
 
