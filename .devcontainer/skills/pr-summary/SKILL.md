@@ -53,7 +53,7 @@ Let the user review the summary first and allow them to suggest changes.
 
 ### 2. Update README.md (optional)
 
-Based on the changes found, update the `README.md` file in the repository to reflect any new features, changes, or important information that should be included.
+After the summary is approved, check whether the changes warrant a README update. If they introduce new features, config options, or modules, update the `README.md` accordingly. **Always present the README update (or explicitly state no update is needed) before proceeding to push/PR creation.**
 
 Let the user review the changes to the `README.md` file first and allow them to suggest changes.
 
