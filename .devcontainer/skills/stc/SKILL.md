@@ -1,12 +1,12 @@
 ---
 name: stc
-description: Workflow for reading a standard template construct (STC) based on user inputs, and based on these inputs, either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc. Triggers include "stc", "standard construct template", "review stc", "trigger stc"
+description: Workflow for reading a standard template construct (STC) based on user inputs, and based on these inputs, either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc, C) align STCs, D) retro-fit an STC from the codebase. Triggers include "stc", "standard construct template", "review stc", "trigger stc", "retro stc"
 author: Douglas McGowan
 ---
 
 # STC Workflow
 
-Locate a STC based on inputs and either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc
+Locate a STC based on inputs and either; A) review the stc, report back on potential ambiguity or design issues, and suggest improvements, B) generate new code bases based on the stc, C) align STCs, D) retro-fit an STC from the codebase
 
 ## Requirements
 
@@ -23,17 +23,29 @@ None yet defined
 Search for an `stc` folder within the repo. If a folder is not found, prompt the user to provide a path to the `stc` folder.
 
 Once located, read global context:
-* Always read `stc/GLOBAL.md` — contains language, Pulumi requirements, and conventions referenced by all definitions.
+* Always read `stc/GLOBAL.md` — contains language, tooling, framework requirements and conventions referenced by definitions.
 
 Then read the specific STC definition:
-* **Split structure** (preferred): If `stc/stacks/` and `stc/modules/` directories exist, read only the targeted definition file:
-  * Stack → `stc/stacks/<name>.md` (e.g., `### Organisation` → `stc/stacks/organisation.md`)
-  * Module → `stc/modules/<name>.md` (e.g., `### IAM` → `stc/modules/iam.md`)
-* **Monolithic fallback**: If split files do not exist, search for `DRAFT.md` or `DETAIL.md` in the `stc` folder. Read all that exist and combine their content to form the full STC catalogue.
+* **Split structure** (preferred): If `stc/stacks/` and/or `stc/modules/` directories exist, read only the targeted definition file:
+  * Stack → `stc/stacks/<name>.md` (e.g., `stc/stacks/organisation.md`)
+  * Module → `stc/modules/<name>.md` (e.g., `stc/modules/iam.md`)
+  * The containing folder defines the STC type. No `## Stacks` / `## Modules` header is required inside the definition file.
+* **Monolithic fallback**: If neither split folder exists, search for `DRAFT.md` or `DETAIL.md` in the `stc` folder. Read all that exist and combine their content to form the full STC catalogue. Definitions are `### <Name>` headers under a `## Stacks` or `## Modules` parent header.
 
 For the **alignment** action, read all files under `stc/stacks/` or `stc/modules/` (based on type) rather than a single definition.
 
-### 2. Confirm STC type, name and action
+### 2. Determine applicable GLOBAL rules
+
+GLOBAL.md may scope rules in one of two ways. Detect which applies:
+
+* **Typed definitions**: If the definition declares `* Type: <type>` and GLOBAL.md contains `## Type: <type>` sections
+  * Apply the matching `## Type: <type>` section, plus any section it declares it inherits (e.g. "Inherits `typescript`")
+  * Also apply any GLOBAL content that is not under a `## Type:` section (e.g. the intro, shared conventions)
+  * Ignore all other `## Type:` sections
+  * If the declared type has no matching section, report it to the user and halt until corrected
+* **Untyped definitions** (no `Type` declared): apply all of GLOBAL.md, including parent sections matching the STC type (e.g. `## Stacks` applies to every stack, `## Modules` to every module). This is the original behaviour and must be preserved for existing repos.
+
+### 3. Confirm STC type, name and action
 
 If not decipherable from the user input, prompt the user for the following inputs:
 
@@ -41,38 +53,40 @@ If not decipherable from the user input, prompt the user for the following input
   * Module
   * Stack
 * STC Action
-  * Ensure when reviewing, aligning and generating, all parent headers in the STC are read for global instructions that apply to all child definitions. For example, `## Modules` applies to all module definitions beneath it, `# Standard Template Constructs` applies to every definition in the file.
-  * For reviewing and generating
-    * The name of the STC definition to read. This corresponds to a `### <Name>` header within the STC files (e.g., `### IAM`, `### Identity`).
-      * All STCs must fall under a parent header of `## Stacks` or `## Modules`. Report back to the user if this is not the case, and halt workflow until the STC is corrected.
+  * For reviewing, generating and retro
+    * The name of the STC definition to read. In the split structure this is the file name without `.md` (e.g. `iam`, `service-app-static`). In the monolithic structure it is a `### <Name>` header.
+      * Monolithic structure only: all STCs must fall under a parent header of `## Stacks` or `## Modules`. Report back to the user if this is not the case, and halt workflow until the STC is corrected.
     * Review
       * Review the STC, report back on potential ambiguity or design issues, and suggest improvements
     * Generate
       * Generate (or replace) code based on the STC
+    * Retro
+      * Update the STC to match the current codebase
   * For aligning
     * Alignment
-      * Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies
+      * Review all STC definitions of the given type and identify inconsistencies
 
-### 3. Action STC
+### 4. Action STC
 
 #### If action is review
 
-Review the STC, report back on potential ambiguity or design issues, and suggest improvements. Offer to edit the STC definition to make these updates.
+Review the STC together with the applicable GLOBAL rules (step 2), report back on potential ambiguity or design issues, and suggest improvements. Offer to edit the STC definition to make these updates.
 
 The ideal state is where AI can create the codebase from the STC with minimal user inputs and will consistently create the codebase the same way based on the STC definition.
 
-The STC definition should be self-sufficient to determine:
-* The programming language to use
-* The target code location (derived from naming conventions below)
-* Required dependencies / `package.json` contents (if applicable)
+The STC definition (with applicable GLOBAL rules) should be self-sufficient to determine:
+* The programming language / tooling to use
+* The target code location (see Naming Conventions)
+* Required dependencies (e.g. `package.json` contents, provider versions) where applicable
 * Parent folder structure
 
-If any of these cannot be determined from the STC, flag it as a review finding and suggest how to make the definition explicit.
+If any of these cannot be determined, flag it as a review finding and suggest how to make the definition explicit.
 
 Additional Context:
 
 * Sensible environment-specific inputs (org ID, domain, project ID, etc.) are fine — these can never be predefined and will be unique to each environment. Do not flag as a review item
 * Checking actual generated source code and config files is valid for the purpose of diff, but don't flag discrepancies as a review finding — the STC is the source of truth, not the generated code. The generated code may be out of date or have been modified by hand, so it is not a reliable source of truth.
+* Flag conflicts between the definition and the applicable GLOBAL rules, and between definitions that claim ownership of the same resource or Makefile target
 
 #### If action is generate
 
@@ -80,24 +94,27 @@ Review the STC, if potential ambiguity or design issues, report back and offer t
 
 Once STC is acceptably reviewed, generate code based on the STC:
 
-1. **Determine output path** — Derive from the STC type and name using the naming conventions below:
-   * Stack → `stacks/<name>/` (e.g., `### Identity` → `stacks/identity/`)
-   * Module → `modules/<name>/` (e.g., `### IAM` → `modules/iam/`)
+1. **Determine output path** — See Naming Conventions.
 2. **Replace existing code** — If the target path already exists, warn the user and confirm, then **replace** the code entirely. Generation is a full replacement, not a merge.
 3. **Prompt for environment-specific inputs** — Collect any values the STC cannot predefine (e.g., organisation ID, domain name, project ID). Present these as a clear list before generating.
-4. **Populate config YAML** — Generate `Pulumi.<env>.yaml` files for the stack:
-   * Where the STC defines config keys, populate them with the real values collected in step 3 in `Pulumi.<env>.yaml`. Where existing `Pulumi.<env>.yaml` files have real key/values, preserve them.
-   * Also generate a `Pulumi.<env>.sample.yaml` with the same keys as `Pulumi.<env>.yaml` but all values as placeholders.
-5. **Generate code** — Create the directory structure and files, including `package.json` and any config files as specified by the STC. Follow conventions from existing sibling stacks/modules in the repo.
+4. **Populate config** — Write the collected values to the config file format defined by the applicable GLOBAL rules (e.g. `<env>.tfvars`).
+   * If GLOBAL does not define a config format and the stack is a Pulumi stack, generate `Pulumi.<env>.yaml` files:
+     * Where the STC defines config keys, populate them with the real values collected in step 3 in `Pulumi.<env>.yaml`. Where existing `Pulumi.<env>.yaml` files have real key/values, preserve them.
+     * Also generate a `Pulumi.<env>.sample.yaml` with the same keys as `Pulumi.<env>.yaml` but all values as placeholders.
+   * Where existing config files have real values, preserve them.
+5. **Generate code** — Create the directory structure and files, including dependency manifests and any config files as specified by the STC. Follow conventions from existing sibling stacks/modules in the repo.
+6. **Makefile** — Where the STC or applicable GLOBAL rules define Makefile targets, add or update them in the root `Makefile`, preserving targets owned by other definitions.
 
 #### If action is alignment
 
-Review all STC definitions under `## Modules` or `## Stacks` (based on type) and identify inconsistencies in:
+Review all STC definitions of the given type and identify inconsistencies in:
 
-* Input field naming and types (e.g. `pulumi.Input<string>` usage)
+* Input field naming and types (e.g. `pulumi.Input<string>` usage, snake_case vs camelCase keys)
 * Validation patterns (e.g. "validation deferred to API" vs explicit checks)
-* Return structure conventions
+* Return / output structure conventions
 * Common field handling (e.g. `bindings`, `labels`/`tags`, target parent fields)
+
+Only compare definitions that share the same `Type` (or are all untyped).
 
 **Output:** A comparison table showing the discrepancy and a suggested standardisation. After presenting findings, offer the user to apply the suggested changes to the STC definitions.
 
@@ -109,8 +126,30 @@ Review all STC definitions under `## Modules` or `## Stacks` (based on type) and
 | Validation caveat | Present | Present | Aligned |
 | `name` validation | 3–30 chars | 1–25 chars (reserving postfix) | Both valid — domain-specific rules, no change needed |
 
+#### If action is retro
+
+Update the STC definition to reflect the current state of the codebase. This is a one-way operation — the codebase is the source of truth.
+
+1. **Determine source path** — See Naming Conventions.
+2. **Locate existing code** — If the target path does not exist, warn the user and exit. Advise they need to generate first.
+3. **Read codebase** — Read the source files, dependency manifests and config files from the source path (e.g. `index.ts`, `package.json`, `Pulumi.<env>.yaml`, `*.tf`, `<env>.tfvars`).
+4. **Diff against STC** — Compare the codebase against the current STC definition. Present a summary of differences:
+   * Added fields/features in code not in STC
+   * Changed behaviour (e.g., different defaults, validation, merge logic)
+   * STC fields not implemented in code (flag as "specified but unimplemented")
+5. **Confirm and update** — After user confirms, update the STC definition to match the codebase:
+   * Input definition (fields, types, optionality)
+   * Dependencies
+   * Validation rules
+   * Requirements (logic, resource usage, module calls)
+   * Return / output section
+   * Fields specified in STC but not implemented in code are **removed** (codebase wins)
+
 ## Naming Conventions
 
-* `## Stacks` in the STC refers to the `stacks/` parent directory in the repo root
-* `## Modules` in the STC refers to the `modules/` parent directory in the repo root
-* `### <Name>` headers (e.g., `### Identity`, `### IAM`) map to a subfolder within the parent directory. Folder names are always **lowercase** (e.g., `### Identity` → `stacks/identity/`, `### Project` → `modules/project/`)
+* Target code location, in priority order:
+  1. An explicit location in the definition (e.g. `* Location` → `All code is located in app/client`)
+  2. Split structure: `stacks/<file name>/` or `modules/<file name>/` (e.g. `stc/stacks/service-app-static.md` → `stacks/service-app-static/`)
+  3. Monolithic structure: `stacks/<name>/` or `modules/<name>/`, where `<name>` is the `### <Name>` header lowercased with spaces replaced by `-` (e.g. `### Identity` → `stacks/identity/`)
+* `## Stacks` / `stc/stacks/` refers to the `stacks/` parent directory in the repo root by default
+* `## Modules` / `stc/modules/` refers to the `modules/` parent directory in the repo root by default
