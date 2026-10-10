@@ -106,6 +106,9 @@ EOF
 #Install Opencode AI for custom model interaction (I think?! I'm new to this!)
 RUN npm install -g opencode-ai
 
+#Install Firebase CLI
+RUN npm install -g firebase-tools
+
 # Add non priviledged user but give sudo access
 # RUN useradd -m ${DEV_USER} #Keeping for historical reasons, default user of ubuntu is now used
 RUN echo "${DEV_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${DEV_USER}
@@ -129,6 +132,7 @@ RUN mkdir -p \
     /home/${DEV_USER}/.local \
     /home/${DEV_USER}/.config/gcloud \
     /home/${DEV_USER}/.config/gh \
+    /home/${DEV_USER}/.config/configstore \
     /home/${DEV_USER}/.ssh \
     /home/${DEV_USER}/.vscode \
     /home/${DEV_USER}/.vscode-server \
