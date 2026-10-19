@@ -129,6 +129,11 @@ RUN curl -fsSL https://get.pulumi.com | sh \
 # Copy skills to Claude config
 COPY ${DEV_CONTAINER_PATH}/skills/ /home/${DEV_USER}/.claude/skills/
 
+# Symlink skills into Copilot config so VS Code picks them up by default
+RUN mkdir -p /home/${DEV_USER}/.copilot/skills \
+    && ln -s /home/${DEV_USER}/.claude/skills/pr-summary /home/${DEV_USER}/.copilot/skills/pr-summary \
+    && ln -s /home/${DEV_USER}/.claude/skills/stc /home/${DEV_USER}/.copilot/skills/stc
+
 #WARNING: All steps below are manadatory for this to work as a dev container ... period. If you miss these steps, you will just get an useless error message
 #         Ensure all steps run as the non priviledged developer user.
 
